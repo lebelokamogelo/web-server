@@ -5,6 +5,7 @@
 // and html content
 //
 use std::{
+    fs,
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
 };
@@ -23,7 +24,7 @@ fn main() {
         // stream return a results
         let stream = stream.unwrap();
 
-        handle_connection(stream)
+        handle_connection(stream);
     }
 }
 
@@ -34,7 +35,7 @@ fn handle_connection(mut stream: TcpStream) {
 
     // iter over the buffer then get the first line
     // more likely the header
-    // e.g Request: "GET /hhh HTTP/1.1"
+    // e.g Request: "GET / HTTP/1.1"
     let http_request = buffer.lines().next().unwrap().unwrap();
 
     // A Closer Look at an HTTP Request
@@ -54,9 +55,38 @@ fn handle_connection(mut stream: TcpStream) {
     //e.g simple response HTTP/1.1 200 OK\r\n\r\n
     //
     // writing a simple http response with no body
-    let response = "HTTP/1.1 200 OK\r\n\r\n";
+    let status = "HTTP/1.1 200 OK";
 
-    // return thr reponse to the client
-    // convert it to bytes since the tcp transport is a byte stream protocol
-    stream.write_all(response.as_bytes()).unwrap();
+    // return the reponse to the client
+    // convert it to bytes, tcp transport is a byte stream protocol
+    // stream.write_all(response.as_bytes()).unwrap();
+
+    // TODO: Returning Real html
+    // use the file system to get the content of the file
+    //
+    //
+    // TODO: Validating the request and selectively responding
+    //
+
+    if http_request.starts_with("GET / HTTP/1.1") {
+        let contents = fs::read_to_string("hello.html").unwrap();
+        let length = contents.len();
+
+        // format the response
+        let response = format!("{status}\r\nContent-Length: {length}\r\n\r\n{contents}");
+
+        // render the content to the browser on each request
+        stream.write(response.as_bytes()).unwrap();
+    } else {
+        // return the 404.html Not Found
+
+        let contents = fs::read_to_string("404.html").unwrap();
+
+        let length = contents.len();
+
+        let status = "HTTP/1.1 404 NOT FOUND";
+        let reponse = format!("{status}\r\nContent-Length: {length}\r\n\r\n{contents}");
+
+        stream.write(reponse.as_bytes()).unwrap();
+    }
 }

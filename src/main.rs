@@ -8,6 +8,8 @@ use std::{
     fs,
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
+    thread,
+    time::Duration,
 };
 
 fn main() {
@@ -23,8 +25,22 @@ fn main() {
     for stream in listener.incoming() {
         // stream return a results
         let stream = stream.unwrap();
-
-        handle_connection(stream);
+        // TODO: Turning Our Single-Threaded Server into a Multithreaded Server
+        // our server run sync
+        // simulate it using the delay timeout since our server
+        // does not take time to respond
+        //
+        // TODO: Improving Throughput with a Thread Pool
+        // A thread pool is a group of spawned threads that are waiting and
+        // ready to handle a task.
+        //
+        // - We will limit the N number of thread to prevent dOS
+        // -
+        // Spawning a Thread for Each Request
+        // - the bad way
+        thread::spawn(|| {
+            handle_connection(stream);
+        });
     }
 }
 
@@ -94,12 +110,17 @@ fn handle_connection(mut stream: TcpStream) {
     // Touch of refactoring
     // remove the code repetition
     // clean up
-    let (status_line, filename) = if request_line == "GET / HTTP/1.1" {
-        ("HTTP/1.1 200 OK", "hello.html")
-    } else {
-        ("HTTP/1.1 404 NOT FOUND", "404.html")
+    //
+    // turn the if else to match multiple pages
+    let (status_line, filename) = match request_line.as_str() {
+        "GET / HTTP/1.1" => ("HTTP/1.1 200 0K", "hello.html"),
+        "GET /sleep HTTP/1.1" => {
+            // this is to simulate slow request
+            thread::sleep(Duration::from_secs(3));
+            ("HTTP/1.1 200 OK", "hello.html")
+        }
+        _ => ("HTTP/1.1 400 NOT FOUND", "404.html"),
     };
-
     let contents = fs::read_to_string(filename).unwrap();
     let length = contents.len();
 

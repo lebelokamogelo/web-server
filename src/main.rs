@@ -12,6 +12,8 @@ use std::{
     time::Duration,
 };
 
+use web_server::ThreadPool;
+
 fn main() {
     // create the TcpListener
     // bind it to port 7878
@@ -25,6 +27,10 @@ fn main() {
     for stream in listener.incoming() {
         // stream return a results
         let stream = stream.unwrap();
+        // TODO Multithreaded: Creating a Finite Number of Threads
+        // Struct
+        let pool = ThreadPool::new(4);
+
         // TODO: Turning Our Single-Threaded Server into a Multithreaded Server
         // our server run sync
         // simulate it using the delay timeout since our server
@@ -38,7 +44,12 @@ fn main() {
         // -
         // Spawning a Thread for Each Request
         // - the bad way
-        thread::spawn(|| {
+        // - vulnerable to attacks, overwhe,m our server
+        // - os is responsible to thread management, thread on pc are limited
+        //
+        //
+        // pool.execute has a similar interface as the thread::spwan
+        pool.execute(|| {
             handle_connection(stream);
         });
     }

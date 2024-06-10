@@ -18,7 +18,6 @@ pub struct ThreadPool {
 //In ThreadPool::new, use the for loop counter to generate an id, create a new Worker with that id, and store the worker in the vector.
 
 // struct Job;
-
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
 impl ThreadPool {

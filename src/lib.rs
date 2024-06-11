@@ -28,12 +28,14 @@ impl ThreadPool {
         assert!(size > 0);
 
         let (sender, receiver) = mpsc::channel();
+        // we use the Arc to make use of the same reciever mult
         let reciever = Arc::new(Mutex::new(receiver));
 
         // let mut threads = Vec::with_capacity(size);
         let mut workers = Vec::with_capacity(size);
 
         for id in 0..size {
+            // pass each reciever to each worker
             workers.push(Worker::new(id, Arc::clone(&reciever)));
         }
 
@@ -61,6 +63,7 @@ struct Worker {
 
 impl Worker {
     fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
+        // loop the thread to run infinite looking for jobs
         let thread = thread::spawn(move || {
             while let Ok(job) = receiver.lock().unwrap().recv() {
                 println!("Worker {id} got a job; executing.");

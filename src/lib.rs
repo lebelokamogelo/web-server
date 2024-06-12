@@ -6,7 +6,7 @@ use std::{
 pub struct ThreadPool {
     // Creating Space to Store the threads
     // threads: Vec<thread::JoinHandle<()>>,
-    workers: Vec<Worker>,
+    _workers: Vec<Worker>,
     sender: mpsc::Sender<Job>,
 }
 // our ThreadPool have a new and execute methods
@@ -39,7 +39,10 @@ impl ThreadPool {
             workers.push(Worker::new(id, Arc::clone(&reciever)));
         }
 
-        ThreadPool { workers, sender }
+        ThreadPool {
+            _workers: workers,
+            sender,
+        }
     }
 
     // the execute method should me the same as the thread spawn
@@ -57,8 +60,8 @@ impl ThreadPool {
 }
 
 struct Worker {
-    id: usize,
-    thread: thread::JoinHandle<()>,
+    _id: usize,
+    _thread: thread::JoinHandle<()>,
 }
 
 impl Worker {
@@ -72,6 +75,9 @@ impl Worker {
             }
         });
 
-        Worker { id, thread }
+        Worker {
+            _id: id,
+            _thread: thread,
+        }
     }
 }
